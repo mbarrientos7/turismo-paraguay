@@ -1,8 +1,14 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react";
 
-type FontSize = "normal" | "large" | "xlarge";
+type FontSize = number;
 type ContrastMode = "default" | "high";
 
 interface AccessibilitySettings {
@@ -23,25 +29,35 @@ export const AccessibilityProvider = ({
 }: {
   children: ReactNode;
 }) => {
-  const [settings, setSettings] = useState<AccessibilitySettings>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("accessibilitySettings");
-      return saved
-        ? JSON.parse(saved)
-        : { fontSize: "normal", contrast: "default" };
-    }
-    return { fontSize: "normal", contrast: "default" };
-  });
+  const [settings, setSettings] = useState<AccessibilitySettings | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    setSettings({ fontSize: 16, contrast: "default" });
+  }, []);
 
   const updateSettings = (newSettings: Partial<AccessibilitySettings>) => {
+    if (!settings) return;
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
-    localStorage.setItem("accessibilitySettings", JSON.stringify(updated));
   };
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (settings?.contrast === "high") {
+        document.body.classList.add("high-contrast");
+      } else {
+        document.body.classList.remove("high-contrast");
+      }
+    }
+  }, [settings?.contrast]);
+
   return (
-    <AccessibilityContext.Provider value={{ settings, updateSettings }}>
-      {children}
+    <AccessibilityContext.Provider
+      value={{ settings: settings!, updateSettings }}
+    >
+      {settings ? children : null}
     </AccessibilityContext.Provider>
   );
 };
