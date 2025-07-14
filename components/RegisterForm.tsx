@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { paraguaySchema, ParaguayFormData } from "@/lib/validations";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export const RegisterForm = () => {
   const { settings } = useAccessibility();
@@ -12,17 +13,22 @@ export const RegisterForm = () => {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<ParaguayFormData>({
     resolver: zodResolver(paraguaySchema),
   });
 
-  const [success, setSuccess] = useState("");
   const [showToast, setShowToast] = useState(false);
+  const router = useRouter();
 
   const onSubmit = (data: ParaguayFormData) => {
     localStorage.setItem("registroUsuario", JSON.stringify(data));
-    setSuccess("¡Registro exitoso! Tus datos han sido guardados.");
+    reset();
     setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+      router.push("/");
+    }, 2000);
   };
 
   useEffect(() => {
@@ -57,18 +63,6 @@ export const RegisterForm = () => {
         >
           Formulario de registro
         </h2>
-        {success && (
-          <div
-            className={`p-2 rounded mb-2 text-center font-semibold ${
-              settings.contrast === "high"
-                ? "bg-yellow-400 text-black"
-                : "bg-green-100 text-green-800"
-            }`}
-            role="alert"
-          >
-            {success}
-          </div>
-        )}
         <div>
           <label
             className={`block mb-1 font-semibold ${
